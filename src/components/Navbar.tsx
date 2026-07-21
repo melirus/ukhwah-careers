@@ -19,7 +19,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link href="/jobs" className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <span className="bg-emerald-600 text-white p-1.5 rounded-lg text-sm">🌙</span>
-              <span>HalalTalent</span>
+              <span>Ukhwah Careers</span>
             </Link>
           </div>
 
@@ -40,6 +40,22 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Auth Buttons */}
+            <div className="flex items-center gap-2 ml-2">
+              <Link
+                href="/login"
+                className="px-3.5 py-2 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/login"
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+              >
+                Sign Up
+              </Link>
+            </div>
           </div>
         </div>
       </div>
