@@ -1,10 +1,36 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Check initial auth state
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    // Listen for login/logout events
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   const navLinks = [
     { name: 'Browse Jobs', href: '/jobs' },
@@ -42,20 +68,29 @@ export default function Navbar() {
             })}
 
             {/* Auth Buttons */}
-            <div className="flex items-center gap-2 ml-2">
-              <Link
-                href="/login"
-                className="px-3.5 py-2 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition-colors"
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="ml-2 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-slate-200"
               >
-                Sign In
-              </Link>
-              <Link
-                href="/login"
-                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
-              >
-                Sign Up
-              </Link>
-            </div>
+                Sign Out
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 ml-2">
+                <Link
+                  href="/login"
+                  className="px-3.5 py-2 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/login"
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

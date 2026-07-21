@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import Link from 'next/link';
 
 interface Application {
   id: string;
@@ -21,6 +22,7 @@ interface Application {
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   useEffect(() => {
     fetchUserApplications();
@@ -29,15 +31,16 @@ export default function MyApplicationsPage() {
   const fetchUserApplications = async () => {
     setLoading(true);
 
-    // 1. Get the current logged-in user's session
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
+      setIsAuthenticated(false);
       setLoading(false);
       return;
     }
 
-    // 2. Query applications matching candidate_id
+    setIsAuthenticated(true);
+
     const { data, error } = await supabase
       .from('job_applications')
       .select(`
@@ -73,6 +76,24 @@ export default function MyApplicationsPage() {
         return <span className="bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-md text-xs font-bold">Submitted</span>;
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center space-y-4">
+        <div className="bg-emerald-50 text-emerald-600 p-3 rounded-full text-2xl">🔒</div>
+        <h2 className="text-2xl font-bold text-slate-900">Sign in to view your applications</h2>
+        <p className="text-slate-500 text-sm max-w-sm">
+          Please log in with your account to track your job application statuses.
+        </p>
+        <Link
+          href="/login"
+          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+        >
+          Sign In Now
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
