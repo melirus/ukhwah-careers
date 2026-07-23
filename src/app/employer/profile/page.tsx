@@ -40,24 +40,27 @@ export default function EmployerCompanyProfilePage() {
     setLoading(true);
     setMessage(null);
 
-    // Auto-format website URL if user provides plain text (e.g., company.com -> https://company.com)
+    // Get current logged-in user session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user?.id) {
+      setMessage({ text: 'Session expired or user not logged in. Please sign in again.', type: 'error' });
+      setLoading(false);
+      return;
+    }
+
+    // Auto-format website URL
     let formattedWebsite = website.trim();
     if (formattedWebsite && !/^https?:\/\//i.test(formattedWebsite)) {
       formattedWebsite = `https://${formattedWebsite}`;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      setMessage({ text: 'You must be logged in.', type: 'error' });
-      setLoading(false);
-      return;
-    }
-
+    // Upsert using 'employer_user_id'
     const { error } = await supabase
       .from('companies')
       .upsert(
         {
-          employer_user_id: session.user.id,
+          employer_user_id: session.user.id, // 👈 Ensures non-null UUID is passed
           company_name: companyName,
           industry: industry,
           website: formattedWebsite,
