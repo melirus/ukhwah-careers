@@ -22,15 +22,45 @@ export default function EmployerApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  
+  // Employer Profile Check States
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [hasCompanyProfile, setHasCompanyProfile] = useState<boolean>(true);
 
   useEffect(() => {
-    fetchEmployerApplications();
+    checkEmployerProfileAndFetchData();
   }, []);
 
-  const fetchEmployerApplications = async () => {
+  const checkEmployerProfileAndFetchData = async () => {
     setLoading(true);
     
-    // Fetch applications linked to jobs
+    // 1. Check User Session
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    setIsAuthenticated(true);
+
+    // 2. Check if user has registered a company profile
+    const { data: company } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('owner_id', session.user.id)
+      .single();
+
+    if (!company) {
+      setHasCompanyProfile(false);
+      setLoading(false);
+      return;
+    }
+
+    setHasCompanyProfile(true);
+
+    // 3. Fetch applications linked to employer's jobs
     const { data, error } = await supabase
       .from('job_applications')
       .select(`
@@ -50,8 +80,6 @@ export default function EmployerApplicationsPage() {
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     setUpdatingId(id);
-    
-    console.log("Attempting to update application ID:", id, "to new status:", newStatus);
 
     const { data, error } = await supabase
       .from('job_applications')
@@ -59,13 +87,10 @@ export default function EmployerApplicationsPage() {
       .eq('id', id)
       .select();
 
-    console.log("Supabase Response - Data:", data, "Error:", error);
-
     if (error) {
-      console.error('Supabase Update Error:', error);
       alert(`Failed to update status: ${error.message}`);
     } else if (!data || data.length === 0) {
-      alert('❌ Update failed: No row was modified in Supabase. Check Row Level Security (RLS) policies.');
+      alert('❌ Update failed: Row Level Security (RLS) blocked this change.');
     } else {
       setApplications((prev) =>
         prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app))
@@ -75,6 +100,45 @@ export default function EmployerApplicationsPage() {
     setUpdatingId(null);
   };
 
+  // 🔒 State 1: User Not Logged In
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center space-y-4">
+        <div className="bg-emerald-50 text-emerald-600 p-3 rounded-full text-2xl">🔑</div>
+        <h2 className="text-2xl font-bold text-slate-900">Sign in to Access Employer Portal</h2>
+        <p className="text-slate-500 text-sm max-w-sm">
+          Please log in with your employer account to review applicants and post jobs.
+        </p>
+        <Link
+          href="/login"
+          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+        >
+          Sign In Now
+        </Link>
+      </div>
+    );
+  }
+
+  // 📋 State 2: User Logged In BUT No Company Registered
+  if (!hasCompanyProfile) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center space-y-4">
+        <div className="bg-amber-50 text-amber-600 p-3 rounded-full text-2xl">🏢</div>
+        <h2 className="text-2xl font-bold text-slate-900">Register Your Company Profile</h2>
+        <p className="text-slate-500 text-sm max-w-md">
+          Before managing candidate applications or posting jobs, please complete your organization's setup profile.
+        </p>
+        <Link
+          href="/register-profile"
+          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+        >
+          Register Company Profile
+        </Link>
+      </div>
+    );
+  }
+
+  // 🚀 State 3: Full Access Dashboard
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-6">
