@@ -24,7 +24,7 @@ export default function EmployerCompanyProfilePage() {
     const { data } = await supabase
       .from('companies')
       .select('*')
-      .eq('owner_id', session.user.id)
+      .eq('employer_user_id', session.user.id)
       .single();
 
     if (data) {
@@ -57,13 +57,13 @@ export default function EmployerCompanyProfilePage() {
       .from('companies')
       .upsert(
         {
-          owner_id: session.user.id,
+          employer_user_id: session.user.id,
           company_name: companyName,
           industry: industry,
           website: formattedWebsite,
           description: description,
         },
-        { onConflict: 'owner_id' }
+        { onConflict: 'employer_user_id' }
       );
 
     if (error) {
