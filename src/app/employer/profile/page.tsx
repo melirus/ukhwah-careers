@@ -40,6 +40,12 @@ export default function EmployerCompanyProfilePage() {
     setLoading(true);
     setMessage(null);
 
+    // Auto-format website URL if user provides plain text (e.g., company.com -> https://company.com)
+    let formattedWebsite = website.trim();
+    if (formattedWebsite && !/^https?:\/\//i.test(formattedWebsite)) {
+      formattedWebsite = `https://${formattedWebsite}`;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setMessage({ text: 'You must be logged in.', type: 'error' });
@@ -54,7 +60,7 @@ export default function EmployerCompanyProfilePage() {
           owner_id: session.user.id,
           company_name: companyName,
           industry: industry,
-          website: website,
+          website: formattedWebsite,
           description: description,
         },
         { onConflict: 'owner_id' }
@@ -93,7 +99,7 @@ export default function EmployerCompanyProfilePage() {
               required
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="e.g., Al-Inayah Islamic Fintech"
+              placeholder="e.g., Al Inayah Consultants"
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -110,12 +116,12 @@ export default function EmployerCompanyProfilePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Website URL</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Website URL (Optional)</label>
             <input
-              type="url"
+              type="text"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
-              placeholder="https://company.com"
+              placeholder="e.g., company.com or https://company.com"
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -136,7 +142,7 @@ export default function EmployerCompanyProfilePage() {
             disabled={loading}
             className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm transition-colors shadow-sm disabled:opacity-50"
           >
-            {loading ? 'Saving...' : 'Save Company Profile'}
+            {loading ? 'Saving Profile...' : 'Save Company Profile'}
           </button>
         </form>
       </div>
