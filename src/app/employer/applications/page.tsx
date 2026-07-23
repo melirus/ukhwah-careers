@@ -129,7 +129,7 @@ export default function EmployerApplicationsPage() {
           Before managing candidate applications or posting jobs, please complete your organization's setup profile.
         </p>
         <Link
-            href="/employer/profile"  {/* 👈 Make sure this points to /employer/profile */}
+            href="/employer/profile"
             className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"        >
           Register Company Profile
         </Link>
