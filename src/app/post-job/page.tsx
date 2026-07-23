@@ -31,8 +31,8 @@ export default function PostJobPage() {
     const { data: company } = await supabase
       .from('companies')
       .select('id')
-      .eq('owner_id', session.user.id)
-      .single();
+      .eq('employer_user_id', session.user.id)
+      .maybeSingle();
 
     if (company) {
       setHasCompanyProfile(true);
