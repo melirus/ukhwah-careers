@@ -12,12 +12,10 @@ export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check initial auth state
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
     });
 
-    // Listen for login/logout events
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -35,7 +33,8 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Browse Jobs', href: '/jobs' },
     { name: 'My Applications', href: '/my-applications' },
-    { name: 'Employer Portal', href: '/employer/applications' },
+    { name: 'Employer Dashboard', href: '/employer/applications' },
+    { name: 'Post a Job', href: '/post-job' },
   ];
 
   return (
@@ -49,7 +48,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-3">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -67,7 +66,7 @@ export default function Navbar() {
               );
             })}
 
-            {/* Auth Buttons */}
+            {/* Auth Actions */}
             {user ? (
               <button
                 onClick={handleSignOut}
@@ -79,7 +78,7 @@ export default function Navbar() {
               <div className="flex items-center gap-2 ml-2">
                 <Link
                   href="/login"
-                  className="px-3.5 py-2 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition-colors"
+                  className="px-3 py-2 text-slate-700 hover:text-slate-900 rounded-lg text-xs font-semibold transition-colors"
                 >
                   Sign In
                 </Link>

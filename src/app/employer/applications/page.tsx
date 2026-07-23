@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
+import Link from 'next/link';
 
 interface Application {
   id: string;
@@ -47,41 +48,50 @@ export default function EmployerApplicationsPage() {
     setLoading(false);
   };
 
-const handleStatusUpdate = async (id: string, newStatus: string) => {
-  setUpdatingId(id);
-  
-  console.log("Attempting to update application ID:", id, "to new status:", newStatus);
+  const handleStatusUpdate = async (id: string, newStatus: string) => {
+    setUpdatingId(id);
+    
+    console.log("Attempting to update application ID:", id, "to new status:", newStatus);
 
-  const { data, error } = await supabase
-    .from('job_applications')
-    .update({ status: newStatus })
-    .eq('id', id)
-    .select(); // 👈 Adding .select() returns the updated record array
+    const { data, error } = await supabase
+      .from('job_applications')
+      .update({ status: newStatus })
+      .eq('id', id)
+      .select();
 
-  console.log("Supabase Response - Data:", data, "Error:", error);
+    console.log("Supabase Response - Data:", data, "Error:", error);
 
-  if (error) {
-    console.error('Supabase Update Error:', error);
-    alert(`Failed to update status: ${error.message}`);
-  } else if (!data || data.length === 0) {
-    // RLS policy is blocking the update or ID was not found
-    alert('❌ Update failed: No row was modified in Supabase. Check Row Level Security (RLS) policies.');
-  } else {
-    // Successfully updated in database -> sync UI state
-    setApplications((prev) =>
-      prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app))
-    );
-  }
+    if (error) {
+      console.error('Supabase Update Error:', error);
+      alert(`Failed to update status: ${error.message}`);
+    } else if (!data || data.length === 0) {
+      alert('❌ Update failed: No row was modified in Supabase. Check Row Level Security (RLS) policies.');
+    } else {
+      setApplications((prev) =>
+        prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app))
+      );
+    }
 
-  setUpdatingId(null);
-};
+    setUpdatingId(null);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Incoming Candidate Applications</h1>
-          <p className="text-slate-500 text-sm">Review submitted pitches and manage applicant statuses.</p>
+        
+        {/* Quick Action Header with Post a Job Button */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Incoming Candidate Applications</h1>
+            <p className="text-slate-500 text-sm">Review submitted pitches and manage applicant statuses.</p>
+          </div>
+
+          <Link
+            href="/post-job"
+            className="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm flex items-center gap-1 shrink-0"
+          >
+            <span>+</span> Post a New Job
+          </Link>
         </div>
 
         {loading ? (
